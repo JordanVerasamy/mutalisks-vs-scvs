@@ -38,11 +38,13 @@ class SCVs
       can_shoot_cleanly?(damage, unavailable_indices, i)
     end
 
-    index = 0
+    index = nil
 
     scvs_with_index
       .select { |scv, i| allow_wasting_damage || can_shoot_cleanly?(damage, unavailable_indices, i) }
       .each do |scv, i|
+        next if unavailable_indices.include?(i)
+        index ||= i
         if (scv.attack_change.values.sum > scvs[index].attack_change.values.sum) ||
           (scv.attack_change.values.sum == scvs[index].attack_change.values.sum && scv.hp >= scvs[index].hp)
           index = i

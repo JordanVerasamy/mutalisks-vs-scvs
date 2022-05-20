@@ -16,6 +16,6 @@ class SCVsTest < Minitest::Test
   end
   
   def test_doesnt_shoot_the_same_scv_twice
-    assert_equal 2, SCVs.new([10, 1, 1]).min_attacks_to_kill
+    assert_equal 2, SCVs.new([10, 1, 0]).min_attacks_to_kill
   end
 end
