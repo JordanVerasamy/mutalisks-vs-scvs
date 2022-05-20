@@ -12,10 +12,10 @@ class SCVsTest < Minitest::Test
   end
 
   def test_can_do_a_big_number
-    assert_equal 42, SCVs.new([60]*9).min_attacks_to_kill # => 42
+    assert_equal 42, SCVs.new([60]*9).min_attacks_to_kill
   end
   
-  def test_playing
-    assert_equal 2, SCVs.new([10, 1, 1]).min_attacks_to_kill # => 42
+  def test_doesnt_shoot_the_same_scv_twice
+    assert_equal 2, SCVs.new([10, 1, 1]).min_attacks_to_kill
   end
 end
