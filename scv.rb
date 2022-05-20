@@ -30,20 +30,18 @@ class SCVs
   end
 
   def can_shoot_cleanly?(damage, unavailable_indices, i)
-    scvs[i].attack_change.key?(damage) &&
-    scvs[i].attack_change[damage] > 0 &&
-    !unavailable_indices.include?(i)
+    scvs[i].attack_change[damage] > 0 && !unavailable_indices.include?(i)
   end
 
-  def index_to_shoot_with(damage, unavailable_indices)
-    allow_unclean = scvs_with_index.none? do |scv, i|
+  def index_to_shoot(damage, unavailable_indices)
+    allow_wasting_damage = scvs_with_index.none? do |scv, i|
       can_shoot_cleanly?(damage, unavailable_indices, i)
     end
 
     index = 0
 
     scvs_with_index
-      .select { |scv, i| allow_unclean || can_shoot_cleanly?(damage, unavailable_indices, i) }
+      .select { |scv, i| allow_wasting_damage || can_shoot_cleanly?(damage, unavailable_indices, i) }
       .each do |scv, i|
         if (scv.attack_change.values.sum > scvs[index].attack_change.values.sum) ||
           (scv.attack_change.values.sum == scvs[index].attack_change.values.sum && scv.hp >= scvs[index].hp)
@@ -57,7 +55,7 @@ class SCVs
   def shoot
     shot_indices = []
     [9, 3, 1].each do |damage_component|
-      index = index_to_shoot_with(damage_component, shot_indices)
+      index = index_to_shoot(damage_component, shot_indices)
       shot_indices << index
       hps[index] = [hps[index] - damage_component, 0].max
     end
