@@ -6,14 +6,10 @@ class SCV
   end
 
   def attack_change
-    _9_damage = hp / 9
-    _3_damage = (hp % 9) / 3
-    _1_damage = hp % 3
-
     {
-      9 => _9_damage,
-      3 => _3_damage,
-      1 => _1_damage,
+      9 => hp / 9,
+      3 => (hp % 9) / 3,
+      1 => hp % 3,
     }.compact
   end
 end
@@ -26,60 +22,36 @@ class SCVs
   end
 
   def scvs
-    hps.map do |hp|
-      SCV.new(hp)
-    end
+    hps.map { |hp| SCV.new(hp) }
   end
 
-  def index_of_scv_with_most_shots_remaining(unavailable_indices)
-    index = 0
-
-    scvs.each_with_index do |scv, i|
-      next if unavailable_indices.include?(i)
-
-      if scv.attack_change.values.sum > scvs[index].attack_change.values.sum
-        index = i
-      elsif scv.attack_change.values.sum == scvs[index].attack_change.values.sum
-        # tiebreak by remaining hp
-        if scv.hp >= scvs[index].hp
-          index = i
-        end
-      end
-    end
-    return index
+  def scvs_with_index
+    scvs.zip(0..scvs.length-1)
   end
 
-  def index_of_scv_that_can_take_damage_cleanly_with_most_shots_remaining(damage, unavailable_indices)
-    index = 0
-
-    scvs
-      .zip(0..scvs.length-1)
-      .select { |scv, index| scv.attack_change.key?(damage) && scv.attack_change[damage] > 0 }
-      .each do |scv, i|
-      next if unavailable_indices.include?(i)
-
-      if scv.attack_change.values.sum > scvs[index].attack_change.values.sum
-        index = i
-      elsif scv.attack_change.values.sum == scvs[index].attack_change.values.sum
-        # tiebreak by remaining hp
-        if scv.hp >= scvs[index].hp
-          index = i
-        end
-      end
-    end
-    return index
+  def can_shoot_cleanly?(damage, unavailable_indices, i)
+    scvs[i].attack_change.key?(damage) &&
+    scvs[i].attack_change[damage] > 0 &&
+    !unavailable_indices.include?(i)
   end
 
   def index_to_shoot_with(damage, unavailable_indices)
-    scvs.each_with_index do |scv, i|
-      next if unavailable_indices.include?(i)
-
-      if scv.attack_change.key?(damage) && scv.attack_change[damage] > 0
-        return index_of_scv_that_can_take_damage_cleanly_with_most_shots_remaining(damage, unavailable_indices)
-      end
+    allow_unclean = scvs_with_index.none? do |scv, i|
+      can_shoot_cleanly?(damage, unavailable_indices, i)
     end
 
-    index_of_scv_with_most_shots_remaining(unavailable_indices)
+    index = 0
+
+    scvs_with_index
+      .select { |scv, i| allow_unclean || can_shoot_cleanly?(damage, unavailable_indices, i) }
+      .each do |scv, i|
+        if (scv.attack_change.values.sum > scvs[index].attack_change.values.sum) ||
+          (scv.attack_change.values.sum == scvs[index].attack_change.values.sum && scv.hp >= scvs[index].hp)
+          index = i
+        end
+      end
+
+    return index
   end
 
   def shoot
