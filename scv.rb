@@ -1,3 +1,5 @@
+DAMAGE_COMPONENTS = [9, 3, 1]
+
 class SCV
   attr_accessor :hp
 
@@ -5,12 +7,16 @@ class SCV
     @hp = hp
   end
 
-  def attack_change
-    {
-      9 => hp / 9,
-      3 => (hp % 9) / 3,
-      1 => hp % 3,
-    }.compact
+  def attack_change(remaining_hp=hp, acc={})
+    return acc if (DAMAGE_COMPONENTS - acc.keys).empty?
+
+    damage_per_hit = (DAMAGE_COMPONENTS - acc.keys).first
+    hits = remaining_hp / damage_per_hit
+
+    attack_change(
+      remaining_hp - damage_per_hit * hits,
+      acc.merge(damage_per_hit => hits),
+    )
   end
 end
 
@@ -56,18 +62,17 @@ class SCVs
 
   def shoot
     shot_indices = []
-    [9, 3, 1].each do |damage_component|
+    DAMAGE_COMPONENTS.each do |damage_component|
       index = index_to_shoot(damage_component, shot_indices)
       shot_indices << index
       hps[index] = [hps[index] - damage_component, 0].max
     end
-
-    return hps.any? { |hp| hp > 0}
   end
 
   def min_attacks_to_kill
-    shots = 1
-    while shoot
+    shots = 0
+    while hps.any? { |hp| hp > 0}
+      shoot
       shots += 1
     end
     shots
